@@ -1,0 +1,17 @@
+{
+  "name": "Kentaro Morishita",
+  "age": "38",
+  "job": "Software Engineer",
+  "github": "https://github.com/KentaroMorishita",
+  "qiita": "https://qiita.com/KentaroMorishita",
+  "sns": {
+    "x": "https://x.com/Ken_Morishita",
+    "facebook": "https://www.facebook.com/kentaro.morishita.5"
+  },
+  "ownWorks": {
+    "f-box-core": "https://www.npmjs.com/package/f-box-core",
+    "f-box-react": "https://www.npmjs.com/package/f-box-react",
+    "f-box-docs": "https://f-box-docs.com"
+  },
+  "hobbies": ["Parenting", "Guitar", "Cooking"]
+}
