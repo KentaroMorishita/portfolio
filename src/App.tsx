@@ -1,8 +1,8 @@
 import React from 'react';
 import { RBox, Maybe } from 'f-box-core';
 import { useRBox } from 'f-box-react';
-import type { CommandContext } from './commands';
-import { commands } from './commands';
+import type { CommandContext, AvailableCommands } from './commands';
+import { commands, appendOutput } from './commands';
 
 const backgoundImageURL =
   'https://images.unsplash.com/photo-1601266289415-e7339a97d19b?q=80&w=3270&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
@@ -21,9 +21,9 @@ const App: React.FC = () => {
     if (!input) return;
 
     const [cmd, arg] = input.split(' ');
-    Maybe.pack(commands[cmd]).match(
+    Maybe.pack(commands[cmd as AvailableCommands]).match(
       (cmd) => cmd(ctx, arg),
-      () => commands.help(ctx)
+      () => appendOutput(ctx.outputBox, `Unknown command: ${cmd}. Type 'help' for available commands.`)
     );
   };
 
@@ -32,7 +32,7 @@ const App: React.FC = () => {
       className="py-5 min-h-screen bg-cover bg-center flex items-center justify-center"
       style={{ backgroundImage: `url('${backgoundImageURL}')` }}
     >
-      <div className="bg-gray-800 w-[90%] max-w-[1000px] h-[70%] max-h-[700px] min-h-[450px] rounded-lg shadow-lg flex flex-col opacity-85 text-sm">
+      <div className="bg-gray-800 w-[90%] max-w-[1000px] h-[70%] max-h-[700px] min-h-[618px] rounded-lg shadow-lg flex flex-col opacity-85 text-sm">
         <div className="bg-gray-900 h-8 min-h-8 flex items-center px-4 rounded-t-lg">
           <div className="flex space-x-2">
             <span className="w-3 h-3 bg-red-500 rounded-full"></span>

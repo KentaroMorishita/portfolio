@@ -1,119 +1,90 @@
 import { RBox } from 'f-box-core';
+import help from './assets/help.json' assert {type: "json"};
 import type { FileNode } from './fileSystem';
 import { fileSystem } from './fileSystem';
-import * as help from './assets/help.json';
+
+export type Commands = {
+  ls: (ctx: CommandContext) => void;
+  cd: (ctx: CommandContext, arg?: string) => void;
+  cat: (ctx: CommandContext, arg?: string) => void;
+  help: (ctx: CommandContext) => void;
+  clear: (ctx: CommandContext) => void;
+}
+
+export type AvailableCommands = keyof Commands
 
 export type CommandContext = {
   currentPathBox: RBox<string[]>;
   outputBox: RBox<string[]>;
 };
 
-export const getCurrentDirectory = (currentPath: string[]): FileNode | null => {
-  let currentDir = fileSystem['~'];
-  for (const dir of currentPath.slice(1)) {
-    if (currentDir.type === 'directory' && currentDir.contents?.[dir]) {
-      currentDir = currentDir.contents[dir];
-    } else {
-      return null;
-    }
-  }
-  return currentDir;
+export const getCurrentDirectory = (currentPath: string[]): FileNode =>
+  currentPath.slice(1).reduce<FileNode>((currentDir, dir) => currentDir.contents![dir], fileSystem["~"])
+
+export const appendOutput = (outputBox: RBox<string[]>, message: string | string[]) => {
+  outputBox.setValue((prev) => [...prev, ...[message].flat()]);
 };
 
-const appendOutput = (
-  outputBox: RBox<string[]>,
-  message: string | string[]
-) => {
-  outputBox.setValue((prev) => [
-    ...prev,
-    ...(Array.isArray(message) ? message : [message]),
-  ]);
-};
-
-export const listDirectory = (ctx: CommandContext) => {
-  const dir = getCurrentDirectory(ctx.currentPathBox.getValue());
-  if (!dir || dir.type !== 'directory') {
-    appendOutput(ctx.outputBox, 'Not a directory');
-    return;
-  }
+export const listDirectory = ({ currentPathBox, outputBox }: CommandContext) => {
+  const dir = getCurrentDirectory(currentPathBox.getValue());
   const contents = dir.contents || {};
   const details = Object.entries(contents).map(([name, item]) => {
-    const permissions =
-      item.permissions ||
-      (item.type === 'directory' ? 'drwxr-xr-x' : '-rw-r--r--');
-    const size = item.size || '1 KB';
-    return `${permissions} 1 morishita morishita ${size} ${name}${
-      item.type === 'directory' ? '/' : ''
-    }`;
+    const permissions = item.permissions
+    const size = item.size;
+    const separator = item.type === 'directory' ? '/' : ''
+    return `${permissions} 1 morishita morishita ${size} ${name}${separator}`;
   });
-  appendOutput(ctx.outputBox, details);
+  appendOutput(outputBox, details);
 };
 
-export const changeDirectory = (ctx: CommandContext, dir?: string) => {
-  if (!dir) {
-    appendOutput(ctx.outputBox, 'cd: missing argument');
+export const changeDirectory = ({ currentPathBox, outputBox }: CommandContext, arg?: string) => {
+  if (!arg || arg === '~') {
+    currentPathBox.setValue(() => ["~"]);
     return;
   }
 
-  if (dir === '..') {
-    ctx.currentPathBox.setValue((prev) =>
-      prev.length > 1 ? prev.slice(0, -1) : prev
-    );
-    appendOutput(
-      ctx.outputBox,
-      `Changed directory to ${ctx.currentPathBox.getValue().join('/') || '~'}`
-    );
-    return;
-  }
+  for (const dir of arg.split('/').filter(v => v !== '')) {
+    if (dir === ".." && currentPathBox.getValue().length > 1) {
+      currentPathBox.setValue((prev) => prev.slice(0, -1));
+      continue;
+    }
 
-  const dirObj = getCurrentDirectory(ctx.currentPathBox.getValue());
-  if (
-    !dirObj ||
-    !dirObj.contents?.[dir] ||
-    dirObj.contents[dir].type !== 'directory'
-  ) {
-    appendOutput(ctx.outputBox, `cd: ${dir}: No such directory`);
-    return;
-  }
+    const currentDir = getCurrentDirectory(currentPathBox.getValue());
+    const target = currentDir?.contents?.[dir];
 
-  ctx.currentPathBox.setValue((prev) => [...prev, dir]);
-  appendOutput(ctx.outputBox, `Changed directory to ${dir}`);
+    if (!target || target.type !== "directory") {
+      appendOutput(outputBox, `cd: The directory '${dir}' does not exist`);
+      break;
+    }
+    currentPathBox.setValue((prev) => [...prev, dir]);
+  }
 };
 
-export const readFile = (ctx: CommandContext, file?: string) => {
-  if (!file) {
-    appendOutput(ctx.outputBox, 'cat: missing argument');
+export const readFile = ({ currentPathBox, outputBox }: CommandContext, arg?: string) => {
+  if (!arg) {
+    appendOutput(outputBox, 'cat: missing argument');
     return;
   }
-  const dir = getCurrentDirectory(ctx.currentPathBox.getValue());
-  if (!dir || dir.type !== 'directory' || !dir.contents?.[file]) {
-    appendOutput(ctx.outputBox, `cat: ${file}: No such file`);
+
+  const dir = getCurrentDirectory(currentPathBox.getValue());
+  const target = dir?.contents?.[arg];
+
+  if (!target) {
+    appendOutput(outputBox, `cat: ${arg}: No such file`);
     return;
   }
-  const target = dir.contents[file];
-  if (target.type === 'directory') {
-    appendOutput(ctx.outputBox, `cat: ${file}: Is a directory`);
+
+  if (target.type === "directory") {
+    appendOutput(outputBox, `cat: ${arg}: Is a directory`);
     return;
   }
-  appendOutput(ctx.outputBox, [
-    `Displaying contents of ${file}`,
-    ...(target.body || []),
-  ]);
+  appendOutput(outputBox, [`Displaying contents of ${arg}`, ...(target.body ?? [])]);
 };
 
-export const displayHelp = (ctx: CommandContext) => {
-  appendOutput(ctx.outputBox, (help as any).default);
-};
+export const displayHelp = (ctx: CommandContext) => appendOutput(ctx.outputBox, (help as string[]));
+export const clearOutput = (ctx: CommandContext) => ctx.outputBox.setValue(() => []);
 
-export const clearOutput = (ctx: CommandContext) => {
-  ctx.outputBox.setValue(() => []);
-};
-
-// commands オブジェクト
-export const commands: Record<
-  string,
-  (ctx: CommandContext, arg?: string) => void
-> = {
+export const commands: Commands = {
   ls: listDirectory,
   cd: changeDirectory,
   cat: readFile,
