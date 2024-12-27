@@ -9,7 +9,7 @@ const backgoundImageURL =
 
 const ctx: CommandContext = {
   currentPathBox: RBox.pack<string[]>(['~']),
-  outputBox: RBox.pack<string[]>(['Welcome to the interactive portfolio!']),
+  outputBox: RBox.pack<string[]>(['Welcome to the CLI portfolio!']),
 };
 
 const App: React.FC = () => {
@@ -32,7 +32,7 @@ const App: React.FC = () => {
       className="py-5 min-h-screen bg-cover bg-center flex items-center justify-center"
       style={{ backgroundImage: `url('${backgoundImageURL}')` }}
     >
-      <div className="bg-gray-800 w-[60%] h-[70%] max-h-[700px] min-h-[500px] rounded-lg shadow-lg flex flex-col opacity-85">
+      <div className="bg-gray-800 w-[90%] max-w-[1000px] h-[70%] max-h-[700px] min-h-[450px] rounded-lg shadow-lg flex flex-col opacity-85 text-sm">
         <div className="bg-gray-900 h-8 min-h-8 flex items-center px-4 rounded-t-lg">
           <div className="flex space-x-2">
             <span className="w-3 h-3 bg-red-500 rounded-full"></span>
