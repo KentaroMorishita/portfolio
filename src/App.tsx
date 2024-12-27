@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { RBox, Maybe } from 'f-box-core';
 import { useRBox } from 'f-box-react';
 import type { CommandContext, AvailableCommands } from './commands';
@@ -20,12 +20,20 @@ const App: React.FC = () => {
     const input = _input.trim();
     if (!input) return;
 
-    const [cmd, arg] = input.split(' ');
-    Maybe.pack(commands[cmd as AvailableCommands]).match(
+    const [cmd, arg] = input.split(' ') as [cmd: AvailableCommands, arg: string];
+    Maybe.pack(commands[cmd]).match(
       (cmd) => cmd(ctx, arg),
       () => appendOutput(ctx.outputBox, `Unknown command: ${cmd}. Type 'help' for available commands.`)
     );
   };
+
+  useEffect(() => {
+    const handleClick = () => document.getElementById("console")?.focus();
+    window.addEventListener("click", handleClick);
+    return () => {
+      window.removeEventListener("click", handleClick);
+    };
+  }, []);
 
   return (
     <div
@@ -50,6 +58,7 @@ const App: React.FC = () => {
           <input
             autoFocus
             type="text"
+            id="console"
             className="bg-black text-green-400 border-none outline-none w-3/4"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
