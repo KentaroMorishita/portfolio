@@ -307,7 +307,7 @@ const TerminalWindow: React.FC<{
 
   return (
     <div
-      className={`absolute bg-gray-800 rounded-xl shadow-2xl flex flex-col opacity-90 text-sm overflow-hidden ${
+      className={`absolute bg-slate-900 rounded-xl shadow-2xl border border-slate-700 flex flex-col opacity-95 text-sm overflow-hidden ${
         terminal.isMinimized ? "transition-all duration-300 cursor-pointer select-none" : ""
       }`}
       style={{
@@ -325,7 +325,7 @@ const TerminalWindow: React.FC<{
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
     >
-      <div className="title-bar bg-gray-900 h-8 min-h-8 flex items-center justify-between px-4 rounded-t-lg cursor-move select-none">
+      <div className="title-bar bg-slate-800 h-8 min-h-8 flex items-center justify-between px-4 rounded-t-lg cursor-move select-none border-b border-slate-600">
         <div className="flex space-x-2">
           <span
             className="window-button w-3 h-3 bg-red-500 rounded-full hover:bg-red-400 cursor-pointer flex items-center justify-center group"
@@ -361,7 +361,7 @@ const TerminalWindow: React.FC<{
             </span>
           </span>
         </div>
-        <span className="text-gray-400 text-xs">
+        <span className="text-slate-400 text-xs font-medium">
           Terminal {terminal.id.split("-")[1]}
         </span>
         <div className="w-4"></div>
@@ -369,44 +369,44 @@ const TerminalWindow: React.FC<{
 
       {!terminal.isMinimized && (
         <>
-          <div className="bg-black text-green-400 font-mono p-4 overflow-y-auto whitespace-pre-wrap select-text">
+          <div className="bg-slate-900 text-slate-200 font-mono p-4 overflow-y-auto whitespace-pre-wrap select-text">
             {output.map((line: string, index: number) => {
               const getLineColor = (text: string) => {
                 if (text.includes(" $ ")) {
-                  return "text-white"
+                  return "text-slate-100 font-medium"
                 } else if (
                   text.includes("👨‍💻") ||
                   text.includes("🚀") ||
                   text.includes("🔗") ||
                   text.includes("🎨")
                 ) {
-                  return "text-blue-400"
+                  return "text-sky-300"
                 } else if (
                   text.includes("Error") ||
                   text.includes("error") ||
                   text.includes("No such file")
                 ) {
-                  return "text-red-400"
+                  return "text-rose-400"
                 } else if (
                   text.includes("Welcome") ||
                   text.includes("Available commands")
                 ) {
-                  return "text-yellow-400"
+                  return "text-amber-300"
                 } else if (
                   text.includes("kentaromorishita@portfolio") ||
                   text.includes("OS:") ||
                   text.includes("Host:")
                 ) {
-                  return "text-cyan-400"
+                  return "text-cyan-300"
                 } else if (
                   text.startsWith("│") ||
                   text.startsWith("╭") ||
                   text.startsWith("╰") ||
                   text.startsWith("├")
                 ) {
-                  return "text-purple-400"
+                  return "text-violet-300"
                 }
-                return "text-green-400"
+                return "text-slate-200"
               }
 
               const renderLineWithLinks = (text: string) => {
@@ -421,7 +421,7 @@ const TerminalWindow: React.FC<{
                         href={part}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-cyan-300 hover:text-cyan-100 underline hover:no-underline cursor-pointer"
+                        className="text-sky-300 hover:text-sky-100 underline hover:no-underline cursor-pointer transition-colors"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {part}
@@ -440,43 +440,43 @@ const TerminalWindow: React.FC<{
             })}
             <div ref={outputEndRef} />
           </div>
-          <div className="flex-1 bg-black text-green-400 font-mono p-4 select-text relative">
+          <div className="flex-1 bg-slate-900 text-slate-200 font-mono p-4 select-text relative border-t border-slate-700">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-gray-500 text-xs">
+              <span className="text-slate-400 text-xs font-medium">
                 {currentTime.toLocaleTimeString()} | Commands:{" "}
                 {commandHistory.length}
               </span>
             </div>
-            <span className="text-cyan-400">{currentPath.join("/")}</span>
-            <span className="text-yellow-400"> $ </span>
+            <span className="text-sky-300 font-medium">{currentPath.join("/")}</span>
+            <span className="text-amber-300 font-bold"> $ </span>
             <input
               autoFocus={!terminal.isMinimized}
               type="text"
               id={`console-${terminal.id}`}
-              className="bg-black text-green-400 border-none outline-none w-3/4"
+              className="bg-slate-900 text-slate-200 border-none outline-none w-3/4 placeholder-slate-500"
               onKeyDown={handleKeyDown}
             />
           </div>
 
           {/* リサイズハンドル群 */}
           <div
-            className="resize-handle absolute top-0 right-0 w-1 h-full cursor-e-resize hover:bg-blue-500 opacity-0 hover:opacity-50"
+            className="resize-handle absolute top-0 right-0 w-1 h-full cursor-e-resize hover:bg-sky-500 opacity-0 hover:opacity-50"
             data-direction="e"
           />
           <div
-            className="resize-handle absolute top-0 left-0 w-1 h-full cursor-w-resize hover:bg-blue-500 opacity-0 hover:opacity-50"
+            className="resize-handle absolute top-0 left-0 w-1 h-full cursor-w-resize hover:bg-sky-500 opacity-0 hover:opacity-50"
             data-direction="w"
           />
           <div
-            className="resize-handle absolute bottom-0 left-0 w-full h-1 cursor-s-resize hover:bg-blue-500 opacity-0 hover:opacity-50"
+            className="resize-handle absolute bottom-0 left-0 w-full h-1 cursor-s-resize hover:bg-sky-500 opacity-0 hover:opacity-50"
             data-direction="s"
           />
           <div
-            className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-gray-700 opacity-50 hover:opacity-100"
+            className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-slate-600 opacity-50 hover:opacity-100"
             data-direction="se"
           >
             <svg
-              className="w-4 h-4 text-gray-400"
+              className="w-4 h-4 text-slate-400"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -489,7 +489,7 @@ const TerminalWindow: React.FC<{
             </svg>
           </div>
           <div
-            className="resize-handle absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize hover:bg-gray-700 opacity-50 hover:opacity-100"
+            className="resize-handle absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize hover:bg-slate-600 opacity-50 hover:opacity-100"
             data-direction="sw"
           />
         </>
@@ -558,10 +558,10 @@ const App: React.FC = () => {
     >
       {/* デスクトップアイコン */}
       <div
-        className="absolute bottom-4 left-4 w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center cursor-pointer hover:bg-gray-700 transition-colors shadow-lg"
+        className="absolute bottom-4 left-4 w-16 h-16 bg-slate-800 border border-slate-600 rounded-2xl flex items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors shadow-lg"
         onDoubleClick={createNewTerminalWindow}
       >
-        <div className="text-green-400 text-2xl">⚡</div>
+        <div className="text-sky-300 text-2xl">⚡</div>
       </div>
 
       {/* ターミナルウィンドウ群 */}
