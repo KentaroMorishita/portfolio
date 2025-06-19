@@ -4,5 +4,10 @@
   "cd [dir]    - Change directory",
   "cat [file]  - Display file contents",
   "clear       - Clear the terminal",
-  "help        - Show available commands"
+  "help        - Show available commands",
+  "",
+  "Portfolio commands:",
+  "whoami      - Display detailed profile information",
+  "projects    - Show project portfolio",
+  "neofetch    - Display system-style developer info"
 ]

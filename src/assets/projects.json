@@ -1,0 +1,31 @@
+[
+  {
+    "name": "F-Box State Management Library",
+    "description": "Reactive state management library for JavaScript/TypeScript",
+    "tech": ["TypeScript", "React", "Node.js"],
+    "status": "Active",
+    "links": {
+      "npm-core": "https://www.npmjs.com/package/f-box-core",
+      "npm-react": "https://www.npmjs.com/package/f-box-react",
+      "docs": "https://f-box-docs.com"
+    }
+  },
+  {
+    "name": "CLI Portfolio",
+    "description": "Interactive terminal-style portfolio website",
+    "tech": ["React", "TypeScript", "Vite", "Tailwind CSS"],
+    "status": "Active",
+    "links": {
+      "demo": "https://your-portfolio-url.com"
+    }
+  },
+  {
+    "name": "Various Web Applications",
+    "description": "Multiple web applications using modern frameworks",
+    "tech": ["Next.js", "Vue.js", "Nuxt.js", "PHP", "Laravel"],
+    "status": "Ongoing",
+    "links": {
+      "github": "https://github.com/KentaroMorishita"
+    }
+  }
+]
