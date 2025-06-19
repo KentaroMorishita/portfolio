@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useRef } from "react"
 import { RBox, Maybe } from "f-box-core"
-import { useRBox } from "f-box-react"
+import { useRBox, set } from "f-box-react"
 import type { CommandContext, AvailableCommands } from "./commands"
 import { commands, appendOutput } from "./commands"
 
@@ -202,14 +202,23 @@ const TerminalWindow: React.FC<{
 }> = ({ terminal, onUpdate, onClose, onFocus }) => {
   const [currentPath] = useRBox(terminal.context.currentPathBox)
   const [output] = useRBox(terminal.context.outputBox)
-  const [commandHistory, setCommandHistory] = useState<string[]>([])
-  const [historyIndex, setHistoryIndex] = useState(-1)
-  const [currentInput, setCurrentInput] = useState("")
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const [isDragging, setIsDragging] = useState(false)
-  const [isResizing, setIsResizing] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const [resizeDirection, setResizeDirection] = useState<string>("")
+  const [commandHistory, commandHistoryBox] = useRBox<string[]>([])
+  const [historyIndex, historyIndexBox] = useRBox<number>(-1)
+  const [currentInput, currentInputBox] = useRBox<string>("")
+  const [currentTime, currentTimeBox] = useRBox<Date>(new Date())
+  const [isDragging, isDraggingBox] = useRBox<boolean>(false)
+  const [isResizing, isResizingBox] = useRBox<boolean>(false)
+  const [dragStart, dragStartBox] = useRBox<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [resizeDirection, resizeDirectionBox] = useRBox<string>("")
+
+  const setCommandHistory = set(commandHistoryBox)
+  const setHistoryIndex = set(historyIndexBox)
+  const setCurrentInput = set(currentInputBox)
+  const setCurrentTime = set(currentTimeBox)
+  const setIsDragging = set(isDraggingBox)
+  const setIsResizing = set(isResizingBox)
+  const setDragStart = set(dragStartBox)
+  const setResizeDirection = set(resizeDirectionBox)
   const outputEndRef = useRef<HTMLDivElement>(null)
 
   const handleCommand = (_input: string) => {
@@ -652,12 +661,15 @@ const TerminalWindow: React.FC<{
 }
 
 const App: React.FC = () => {
-  const [terminals, setTerminals] = useState<Terminal[]>(() => {
+  const [terminals, terminalsBox] = useRBox<Terminal[]>(() => {
     // 初期ターミナルを作成
     terminalIdCounter = 0 // カウンターをリセット
     return [createNewTerminal()]
   })
-  const [maxZIndex, setMaxZIndex] = useState(1)
+  const [maxZIndex, maxZIndexBox] = useRBox<number>(1)
+
+  const setTerminals = set(terminalsBox)
+  const setMaxZIndex = set(maxZIndexBox)
 
   const updateTerminal = (updatedTerminal: Terminal) => {
     setTerminals((prev) =>
