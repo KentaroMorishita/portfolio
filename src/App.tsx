@@ -1,11 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RBox, Maybe } from 'f-box-core';
 import { useRBox } from 'f-box-react';
 import type { CommandContext, AvailableCommands } from './commands';
 import { commands, appendOutput } from './commands';
 
-const backgoundImageURL =
-  'https://images.unsplash.com/photo-1601266289415-e7339a97d19b?q=80&w=3270&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+const backgoundImageURL = 'https://picsum.photos/1920/1080?blur=2';
 
 const ctx: CommandContext = {
   currentPathBox: RBox.pack<string[]>(['~']),
@@ -15,6 +14,7 @@ const ctx: CommandContext = {
 const App: React.FC = () => {
   const [currentPath] = useRBox(ctx.currentPathBox);
   const [output] = useRBox(ctx.outputBox);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const handleCommand = (_input: string) => {
     const input = _input.trim();
@@ -30,6 +30,12 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleClick = () => document.getElementById("console")?.focus();
     window.addEventListener("click", handleClick);
+    
+    // 背景画像を事前に読み込み
+    const img = new Image();
+    img.onload = () => setImageLoaded(true);
+    img.src = backgoundImageURL;
+    
     return () => {
       window.removeEventListener("click", handleClick);
     };
@@ -38,7 +44,11 @@ const App: React.FC = () => {
   return (
     <div
       className="py-5 min-h-screen bg-cover bg-center flex items-center justify-center"
-      style={{ backgroundImage: `url('${backgoundImageURL}')` }}
+      style={{ 
+        background: imageLoaded 
+          ? `url('${backgoundImageURL}') center/cover` 
+          : 'linear-gradient(to bottom right, #111827, #374151, #000000)',
+      }}
     >
       <div className="bg-gray-800 w-[90%] max-w-[1000px] h-[70%] max-h-[700px] min-h-[618px] rounded-lg shadow-lg flex flex-col opacity-85 text-sm">
         <div className="bg-gray-900 h-8 min-h-8 flex items-center px-4 rounded-t-lg">
