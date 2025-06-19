@@ -99,7 +99,7 @@ const CyberpunkBackground: React.FC = () => {
           <animateTransform
             attributeName="transform"
             type="translate"
-            values="0,-100; 0,100vh"
+            values="0,-100; 0,800"
             dur="6s"
             repeatCount="indefinite"
           />
@@ -114,7 +114,7 @@ const CyberpunkBackground: React.FC = () => {
           <animateTransform
             attributeName="transform"
             type="translate"
-            values="0,-50; 0,100vh"
+            values="0,-50; 0,800"
             dur="8s"
             repeatCount="indefinite"
           />
@@ -127,18 +127,51 @@ const CyberpunkBackground: React.FC = () => {
             fill="#00ffaa"
             opacity="0.4"
           />
-          <path
-            d="M 100vw 0 L calc(100vw - 150px) 0 L calc(100vw - 150px) 3 L calc(100vw - 3px) 3 L calc(100vw - 3px) 150 L 100vw 150 Z"
+          <rect
+            x="calc(100% - 150px)"
+            y="0"
+            width="150"
+            height="3"
             fill="#0088ff"
             opacity="0.4"
           />
-          <path
-            d="M 0 100vh L 150 100vh L 150 calc(100vh - 3px) L 3 calc(100vh - 3px) L 3 calc(100vh - 150px) L 0 calc(100vh - 150px) Z"
+          <rect
+            x="calc(100% - 3px)"
+            y="0"
+            width="3"
+            height="150"
+            fill="#0088ff"
+            opacity="0.4"
+          />
+          <rect
+            x="0"
+            y="calc(100% - 150px)"
+            width="3"
+            height="150"
             fill="#ff0088"
             opacity="0.4"
           />
-          <path
-            d="M 100vw 100vh L calc(100vw - 150px) 100vh L calc(100vw - 150px) calc(100vh - 3px) L calc(100vw - 3px) calc(100vh - 3px) L calc(100vw - 3px) calc(100vh - 150px) L 100vw calc(100vh - 150px) Z"
+          <rect
+            x="0"
+            y="calc(100% - 3px)"
+            width="150"
+            height="3"
+            fill="#ff0088"
+            opacity="0.4"
+          />
+          <rect
+            x="calc(100% - 150px)"
+            y="calc(100% - 3px)"
+            width="150"
+            height="3"
+            fill="#00ffaa"
+            opacity="0.4"
+          />
+          <rect
+            x="calc(100% - 3px)"
+            y="calc(100% - 150px)"
+            width="3"
+            height="150"
             fill="#00ffaa"
             opacity="0.4"
           />
@@ -647,6 +680,8 @@ const TerminalWindow: React.FC<{
                 strokeWidth="2"
                 stroke="currentColor"
                 fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
           </div>
