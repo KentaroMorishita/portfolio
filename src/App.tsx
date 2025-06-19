@@ -4,7 +4,149 @@ import { useRBox } from "f-box-react"
 import type { CommandContext, AvailableCommands } from "./commands"
 import { commands, appendOutput } from "./commands"
 
-const backgoundImageURL = "https://picsum.photos/1920/1080?blur=2"
+// Cyberpunk background component
+const CyberpunkBackground: React.FC = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <svg width="100%" height="100%" className="absolute inset-0">
+        <defs>
+          <linearGradient id="cyberBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop
+              offset="0%"
+              style={{ stopColor: "#000a1a", stopOpacity: 1 }}
+            />
+            <stop
+              offset="25%"
+              style={{ stopColor: "#0f0f2e", stopOpacity: 1 }}
+            />
+            <stop
+              offset="50%"
+              style={{ stopColor: "#1a0033", stopOpacity: 1 }}
+            />
+            <stop
+              offset="75%"
+              style={{ stopColor: "#001122", stopOpacity: 1 }}
+            />
+            <stop
+              offset="100%"
+              style={{ stopColor: "#000000", stopOpacity: 1 }}
+            />
+          </linearGradient>
+
+          <pattern
+            id="cyberGrid"
+            width="80"
+            height="80"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M 80 0 L 0 0 0 80"
+              fill="none"
+              stroke="#00ffaa"
+              strokeWidth="0.4"
+              opacity="0.3"
+            />
+            <path
+              d="M 40 0 L 40 80 M 0 40 L 80 40"
+              fill="none"
+              stroke="#0088ff"
+              strokeWidth="0.2"
+              opacity="0.2"
+            />
+          </pattern>
+
+          <pattern
+            id="cyberCircuits"
+            width="300"
+            height="300"
+            patternUnits="userSpaceOnUse"
+          >
+            <g stroke="#00ffaa" strokeWidth="1.5" fill="none" opacity="0.2">
+              <path d="M0,75 L75,75 L75,150 L225,150 L225,225 L300,225" />
+              <path d="M300,0 L225,0 L225,75 L150,75 L150,150 L0,150" />
+              <circle cx="75" cy="75" r="4" fill="#00ffaa" />
+              <circle cx="225" cy="150" r="3" fill="#0088ff" />
+              <circle cx="150" cy="225" r="3" fill="#ff0088" />
+            </g>
+          </pattern>
+
+          <filter id="cyberGlow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <rect width="100%" height="100%" fill="url(#cyberBg)" />
+        <rect width="100%" height="100%" fill="url(#cyberGrid)" />
+        <rect
+          width="100%"
+          height="100%"
+          fill="url(#cyberCircuits)"
+          opacity="0.5"
+        />
+
+        {/* Animated scanning lines */}
+        <rect
+          width="100%"
+          height="3"
+          fill="#00ffaa"
+          opacity="0.6"
+          filter="url(#cyberGlow)"
+        >
+          <animateTransform
+            attributeName="transform"
+            type="translate"
+            values="0,-100; 0,100vh"
+            dur="6s"
+            repeatCount="indefinite"
+          />
+        </rect>
+        <rect
+          width="100%"
+          height="2"
+          fill="#0088ff"
+          opacity="0.4"
+          filter="url(#cyberGlow)"
+        >
+          <animateTransform
+            attributeName="transform"
+            type="translate"
+            values="0,-50; 0,100vh"
+            dur="8s"
+            repeatCount="indefinite"
+          />
+        </rect>
+
+        {/* Corner accent lines */}
+        <g filter="url(#cyberGlow)">
+          <path
+            d="M 0 0 L 150 0 L 150 3 L 3 3 L 3 150 L 0 150 Z"
+            fill="#00ffaa"
+            opacity="0.4"
+          />
+          <path
+            d="M 100vw 0 L calc(100vw - 150px) 0 L calc(100vw - 150px) 3 L calc(100vw - 3px) 3 L calc(100vw - 3px) 150 L 100vw 150 Z"
+            fill="#0088ff"
+            opacity="0.4"
+          />
+          <path
+            d="M 0 100vh L 150 100vh L 150 calc(100vh - 3px) L 3 calc(100vh - 3px) L 3 calc(100vh - 150px) L 0 calc(100vh - 150px) Z"
+            fill="#ff0088"
+            opacity="0.4"
+          />
+          <path
+            d="M 100vw 100vh L calc(100vw - 150px) 100vh L calc(100vw - 150px) calc(100vh - 3px) L calc(100vw - 3px) calc(100vh - 3px) L calc(100vw - 3px) calc(100vh - 150px) L 100vw calc(100vh - 150px) Z"
+            fill="#00ffaa"
+            opacity="0.4"
+          />
+        </g>
+      </svg>
+    </div>
+  )
+}
 
 interface Terminal {
   id: string
@@ -152,14 +294,14 @@ const TerminalWindow: React.FC<{
 
   const handleMouseDown = (e: React.MouseEvent) => {
     onFocus()
-    
+
     const target = e.target as HTMLElement
-    
+
     // 出力エリアでのクリックは何もしない（テキスト選択を許可）
     if (target.closest(".output-area")) {
       return
     }
-    
+
     // ウィンドウクリック時にコマンドラインにフォーカス
     setTimeout(() => {
       const input = document.getElementById(`console-${terminal.id}`)
@@ -315,7 +457,9 @@ const TerminalWindow: React.FC<{
   return (
     <div
       className={`absolute bg-slate-900 rounded-xl shadow-2xl border border-slate-700 flex flex-col opacity-95 text-sm overflow-hidden ${
-        terminal.isMinimized ? "transition-all duration-300 cursor-pointer select-none" : ""
+        terminal.isMinimized
+          ? "transition-all duration-300 cursor-pointer select-none"
+          : ""
       }`}
       style={{
         left: `calc(50% + ${terminal.position.x}px)`,
@@ -454,7 +598,9 @@ const TerminalWindow: React.FC<{
                 {commandHistory.length}
               </span>
             </div>
-            <span className="text-sky-300 font-medium">{currentPath.join("/")}</span>
+            <span className="text-sky-300 font-medium">
+              {currentPath.join("/")}
+            </span>
             <span className="text-amber-300 font-bold"> $ </span>
             <input
               autoFocus={!terminal.isMinimized}
@@ -506,7 +652,6 @@ const TerminalWindow: React.FC<{
 }
 
 const App: React.FC = () => {
-  const [imageLoaded, setImageLoaded] = useState(false)
   const [terminals, setTerminals] = useState<Terminal[]>(() => {
     // 初期ターミナルを作成
     terminalIdCounter = 0 // カウンターをリセット
@@ -548,21 +693,9 @@ const App: React.FC = () => {
     setTerminals((prev) => [...prev, newTerminal])
   }
 
-  useEffect(() => {
-    const img = new Image()
-    img.onload = () => setImageLoaded(true)
-    img.src = backgoundImageURL
-  }, [])
-
   return (
-    <div
-      className="min-h-screen bg-cover bg-center relative"
-      style={{
-        background: imageLoaded
-          ? `url('${backgoundImageURL}') center/cover`
-          : "linear-gradient(to bottom right, #111827, #374151, #000000)",
-      }}
-    >
+    <div className="min-h-screen bg-cover bg-center relative">
+      <CyberpunkBackground />
       {/* デスクトップアイコン */}
       <div
         className="absolute bottom-4 left-4 w-16 h-16 bg-slate-800 border border-slate-600 rounded-2xl flex items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors shadow-lg"
