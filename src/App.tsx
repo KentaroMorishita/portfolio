@@ -701,7 +701,7 @@ const App: React.FC = () => {
         className="absolute bottom-4 left-4 w-16 h-16 bg-slate-800 border border-slate-600 rounded-2xl flex items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors shadow-lg"
         onDoubleClick={createNewTerminalWindow}
       >
-        <div className="text-sky-300 text-2xl">⚡</div>
+        <img src="/terminal-icon.svg" alt="Terminal" className="w-10 h-10" />
       </div>
 
       {/* ターミナルウィンドウ群 */}
