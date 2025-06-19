@@ -694,7 +694,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cover bg-center relative">
+    <div className="fixed inset-0 bg-cover bg-center">
       <CyberpunkBackground />
       {/* デスクトップアイコン */}
       <div
