@@ -152,6 +152,14 @@ const TerminalWindow: React.FC<{
 
   const handleMouseDown = (e: React.MouseEvent) => {
     onFocus()
+    
+    const target = e.target as HTMLElement
+    
+    // 出力エリアでのクリックは何もしない（テキスト選択を許可）
+    if (target.closest(".output-area")) {
+      return
+    }
+    
     // ウィンドウクリック時にコマンドラインにフォーカス
     setTimeout(() => {
       const input = document.getElementById(`console-${terminal.id}`)
@@ -160,7 +168,6 @@ const TerminalWindow: React.FC<{
       }
     }, 0)
 
-    const target = e.target as HTMLElement
     if (target.closest(".title-bar") && !target.closest(".window-button")) {
       setIsDragging(true)
       setDragStart({
@@ -369,7 +376,7 @@ const TerminalWindow: React.FC<{
 
       {!terminal.isMinimized && (
         <>
-          <div className="bg-slate-900 text-slate-200 font-mono p-4 overflow-y-auto whitespace-pre-wrap select-text">
+          <div className="output-area bg-slate-900 text-slate-200 font-mono p-4 overflow-y-auto whitespace-pre-wrap select-text">
             {output.map((line: string, index: number) => {
               const getLineColor = (text: string) => {
                 if (text.includes(" $ ")) {
