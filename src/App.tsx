@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { RBox, Maybe } from "f-box-core"
 import { useRBox } from "f-box-react"
 import type { CommandContext, AvailableCommands } from "./commands"
@@ -31,7 +31,6 @@ const createNewTerminal = (offsetX = 0, offsetY = 0): Terminal => {
           "│  Try these commands to explore:                     │",
           "│  • whoami    - View detailed profile                │",
           "│  • projects  - See my projects                      │",
-          "│  • neofetch  - System info style display            │",
           "│  • help      - All available commands               │",
           "╰─────────────────────────────────────────────────────╯",
         ]
@@ -69,6 +68,7 @@ const TerminalWindow: React.FC<{
   const [isResizing, setIsResizing] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [resizeDirection, setResizeDirection] = useState<string>("")
+  const outputEndRef = useRef<HTMLDivElement>(null)
 
   const handleCommand = (_input: string) => {
     const input = _input.trim()
@@ -77,6 +77,12 @@ const TerminalWindow: React.FC<{
     setCommandHistory((prev) => [...prev, input])
     setHistoryIndex(-1)
     setCurrentInput("")
+
+    // コマンドプロンプトを出力に追加
+    appendOutput(
+      terminal.context.outputBox,
+      `${currentPath.join("/")} $ ${input}`
+    )
 
     const [cmd, arg] = input.split(" ") as [cmd: AvailableCommands, arg: string]
     Maybe.pack(commands[cmd]).match(
@@ -91,6 +97,12 @@ const TerminalWindow: React.FC<{
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const input = e.currentTarget
+
+    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      handleCommand("clear")
+      return
+    }
 
     if (e.key === "Enter") {
       handleCommand(input.value)
@@ -287,10 +299,16 @@ const TerminalWindow: React.FC<{
     }
   }, [isDragging, isResizing, handleMouseMove, handleMouseUp])
 
+  useEffect(() => {
+    if (outputEndRef.current) {
+      outputEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [output])
+
   return (
     <div
-      className={`absolute bg-gray-800 rounded-xl shadow-2xl flex flex-col opacity-90 text-sm select-none overflow-hidden ${
-        terminal.isMinimized ? "transition-all duration-300 cursor-pointer" : ""
+      className={`absolute bg-gray-800 rounded-xl shadow-2xl flex flex-col opacity-90 text-sm overflow-hidden ${
+        terminal.isMinimized ? "transition-all duration-300 cursor-pointer select-none" : ""
       }`}
       style={{
         left: `calc(50% + ${terminal.position.x}px)`,
@@ -307,7 +325,7 @@ const TerminalWindow: React.FC<{
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
     >
-      <div className="title-bar bg-gray-900 h-8 min-h-8 flex items-center justify-between px-4 rounded-t-lg cursor-move">
+      <div className="title-bar bg-gray-900 h-8 min-h-8 flex items-center justify-between px-4 rounded-t-lg cursor-move select-none">
         <div className="flex space-x-2">
           <span
             className="window-button w-3 h-3 bg-red-500 rounded-full hover:bg-red-400 cursor-pointer flex items-center justify-center group"
@@ -351,10 +369,12 @@ const TerminalWindow: React.FC<{
 
       {!terminal.isMinimized && (
         <>
-          <div className="bg-black text-green-400 font-mono p-4 overflow-y-auto whitespace-pre-wrap">
+          <div className="bg-black text-green-400 font-mono p-4 overflow-y-auto whitespace-pre-wrap select-text">
             {output.map((line: string, index: number) => {
               const getLineColor = (text: string) => {
-                if (
+                if (text.includes(" $ ")) {
+                  return "text-white"
+                } else if (
                   text.includes("👨‍💻") ||
                   text.includes("🚀") ||
                   text.includes("🔗") ||
@@ -418,6 +438,7 @@ const TerminalWindow: React.FC<{
                 </div>
               )
             })}
+            <div ref={outputEndRef} />
           </div>
           <div className="flex-1 bg-black text-green-400 font-mono p-4 select-text relative">
             <div className="flex items-center justify-between mb-1">

@@ -13,7 +13,6 @@ export type Commands = {
   clear: (ctx: CommandContext) => void;
   whoami: (ctx: CommandContext) => void;
   projects: (ctx: CommandContext) => void;
-  neofetch: (ctx: CommandContext) => void;
 }
 
 export type AvailableCommands = keyof Commands
@@ -213,38 +212,6 @@ export const displayProjects = (ctx: CommandContext) => {
   appendOutput(ctx.outputBox, output);
 };
 
-export const displayNeofetch = (ctx: CommandContext) => {
-  const profileData = profile;
-  const skills = Object.keys(fileSystem["~"].contents!.skills.contents!);
-
-  const output = [
-    "                   -`                    kentaromorishita@portfolio",
-    "                  .o+`                   ──────────────────────────────",
-    "                 `ooo/                   OS: Developer Environment v2024",
-    "                `+oooo:                  Host: Web Portfolio Terminal",
-    "               `+oooooo:                 Kernel: React 19.1.0",
-    "               -+oooooo+:                Uptime: Always learning",
-    "             `/:-:++oooo+:               Packages: " + skills.length + " skills installed",
-    "            `/++++/+++++++:              Shell: TypeScript CLI",
-    "           `/++++++++++++++:             Resolution: Full-stack developer",
-    "          `/+++ooooooooo+++/             DE: VS Code",
-    "         ./ooosssso++osssssso+`          WM: F-Box State Manager",
-    "        .oossssso-````/ossssss+`         Theme: Terminal Green [GTK3]",
-    "       -osssssso.      :ssssssso.        Icons: Emoji Pack",
-    "      :osssssss/        osssso+++.       Terminal: Modern CLI Portfolio",
-    "     /ossssssss/        +ssssooo/-       CPU: " + profileData.name,
-    "   `/ossssso+/:-        -:/+osssso+-     GPU: Creative Problem Solving",
-    "  `+sso+:-`                 `.-/+oso:    Memory: " + profileData.age + " years of experience",
-    " `++:.                           `-/+/   Disk: ∞ GB of curiosity",
-    " .`                                 `/   ",
-    "",
-    "                     Core Skills: " + skills.slice(0, 5).join(', '),
-    "                     Hobbies: " + profileData.hobbies.join(', '),
-    "                     Contact: " + profileData.github
-  ];
-
-  appendOutput(ctx.outputBox, output);
-};
 
 export const commands: Commands = {
   ls: listDirectory,
@@ -254,5 +221,4 @@ export const commands: Commands = {
   clear: clearOutput,
   whoami: displayWhoAmI,
   projects: displayProjects,
-  neofetch: displayNeofetch,
 };

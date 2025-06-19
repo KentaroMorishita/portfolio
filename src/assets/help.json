@@ -8,6 +8,5 @@
   "",
   "Portfolio commands:",
   "whoami      - Display detailed profile information",
-  "projects    - Show project portfolio",
-  "neofetch    - Display system-style developer info"
+  "projects    - Show project portfolio"
 ]
