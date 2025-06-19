@@ -34,13 +34,13 @@ export const appendOutputWithTyping = (outputBox: RBox<string[]>, message: strin
   const lines = [message].flat();
   let currentLineIndex = 0;
   let currentCharIndex = 0;
-  
+
   const typeNextChar = () => {
     if (currentLineIndex >= lines.length) return;
-    
+
     const currentLine = lines[currentLineIndex];
     const currentText = currentLine.slice(0, currentCharIndex + 1);
-    
+
     outputBox.setValue((prev) => {
       const newOutput = [...prev];
       if (currentCharIndex === 0) {
@@ -50,9 +50,9 @@ export const appendOutputWithTyping = (outputBox: RBox<string[]>, message: strin
       }
       return newOutput;
     });
-    
+
     currentCharIndex++;
-    
+
     if (currentCharIndex >= currentLine.length) {
       currentLineIndex++;
       currentCharIndex = 0;
@@ -61,7 +61,7 @@ export const appendOutputWithTyping = (outputBox: RBox<string[]>, message: strin
       setTimeout(typeNextChar, delay);
     }
   };
-  
+
   typeNextChar();
 };
 
@@ -126,68 +126,97 @@ export const clearOutput = (ctx: CommandContext) => ctx.outputBox.setValue(() =>
 
 export const displayWhoAmI = (ctx: CommandContext) => {
   const profileData = profile;
-  const output = [
-    "╭─────────────────────────────────────────────────────╮",
-    "│                    👨‍💻 PROFILE INFO                    │",
-    "├─────────────────────────────────────────────────────┤",
-    `│ Name:     ${profileData.name.padEnd(39)} │`,
-    `│ Age:      ${profileData.age.padEnd(39)} │`,
-    `│ Job:      ${profileData.job.padEnd(39)} │`,
-    "├─────────────────────────────────────────────────────┤",
-    "│                    🔗 LINKS                         │",
-    "├─────────────────────────────────────────────────────┤",
-    `│ GitHub:   ${profileData.github.padEnd(39)} │`,
-    `│ Qiita:    ${profileData.qiita.padEnd(39)} │`,
-    `│ X:        ${profileData.sns.x.padEnd(39)} │`,
-    "├─────────────────────────────────────────────────────┤",
-    "│                    🚀 OWN WORKS                     │",
-    "├─────────────────────────────────────────────────────┤",
-    `│ f-box-core:  ${profileData.ownWorks['f-box-core'].padEnd(34)} │`,
-    `│ f-box-react: ${profileData.ownWorks['f-box-react'].padEnd(34)} │`,
-    `│ f-box-docs:  ${profileData.ownWorks['f-box-docs'].padEnd(34)} │`,
-    "├─────────────────────────────────────────────────────┤",
-    "│                    🎨 HOBBIES                       │",
-    "├─────────────────────────────────────────────────────┤",
-    `│ ${profileData.hobbies.join(' • ').padEnd(51)} │`,
-    "╰─────────────────────────────────────────────────────╯"
+
+  // 実際の行の内容を作成して最大幅を計算
+  const contentLines = [
+    ` Name:     ${profileData.name} `,
+    ` Age:      ${profileData.age} `,
+    ` Job:      ${profileData.job} `,
+    ` GitHub:   ${profileData.github} `,
+    ` Qiita:    ${profileData.qiita} `,
+    ` X:        ${profileData.sns.x} `,
+    ` f-box-core:  ${profileData.ownWorks['f-box-core']} `,
+    ` f-box-react: ${profileData.ownWorks['f-box-react']} `,
+    ` f-box-docs:  ${profileData.ownWorks['f-box-docs']} `,
+    ` ${profileData.hobbies.join(' • ')} `,
+    ' PROFILE INFO ',
+    ' LINKS ',
+    ' OWN WORKS ',
+    ' HOBBIES '
   ];
-  appendOutputWithTyping(ctx.outputBox, output, 20);
+
+  // 最大の行の幅を取得
+  const maxContentWidth = Math.max(...contentLines.map(line => line.length));
+  const borderLine = '─'.repeat(maxContentWidth);
+
+  // センタリング用のヘルパー関数
+  const centerText = (text: string) => {
+    const padding = Math.floor((maxContentWidth - text.length) / 2);
+    return text.padStart(text.length + padding).padEnd(maxContentWidth);
+  };
+
+  const output = [
+    `╭${borderLine}╮`,
+    `│${centerText('PROFILE INFO')}│`,
+    `├${borderLine}┤`,
+    `│${` Name:     ${profileData.name}`.padEnd(maxContentWidth)}│`,
+    `│${` Age:      ${profileData.age}`.padEnd(maxContentWidth)}│`,
+    `│${` Job:      ${profileData.job}`.padEnd(maxContentWidth)}│`,
+    `├${borderLine}┤`,
+    `│${centerText('LINKS')}│`,
+    `├${borderLine}┤`,
+    `│${` GitHub:   ${profileData.github}`.padEnd(maxContentWidth)}│`,
+    `│${` Qiita:    ${profileData.qiita}`.padEnd(maxContentWidth)}│`,
+    `│${` X:        ${profileData.sns.x}`.padEnd(maxContentWidth)}│`,
+    `├${borderLine}┤`,
+    `│${centerText('OWN WORKS')}│`,
+    `├${borderLine}┤`,
+    `│${` f-box-core:  ${profileData.ownWorks['f-box-core']}`.padEnd(maxContentWidth)}│`,
+    `│${` f-box-react: ${profileData.ownWorks['f-box-react']}`.padEnd(maxContentWidth)}│`,
+    `│${` f-box-docs:  ${profileData.ownWorks['f-box-docs']}`.padEnd(maxContentWidth)}│`,
+    `├${borderLine}┤`,
+    `│${centerText('HOBBIES')}│`,
+    `├${borderLine}┤`,
+    `│${` ${profileData.hobbies.join(' • ')}`.padEnd(maxContentWidth)}│`,
+    `╰${borderLine}╯`
+  ];
+  appendOutputWithTyping(ctx.outputBox, output, 5);
 };
 
 export const displayProjects = (ctx: CommandContext) => {
   const projectsData = projects;
   const output = [
-    "╭─────────────────────────────────────────────────────────────────╮",
-    "│                           🚀 PROJECTS                           │",
-    "╰─────────────────────────────────────────────────────────────────╯",
+    "╭─────────────────────────────────────────────────────╮",
+    "│                     PROJECTS                        │",
+    "╰─────────────────────────────────────────────────────╯",
     ""
   ];
-  
+
   projectsData.forEach((project, index) => {
     output.push(
-      `📁 ${project.name}`,
+      `* ${project.name}`,
       `   ${project.description}`,
       `   Tech: ${project.tech.join(', ')}`,
       `   Status: ${project.status}`,
       ""
     );
-    
+
     Object.entries(project.links).forEach(([key, url]) => {
-      output.push(`   🔗 ${key}: ${url}`);
+      output.push(`   ${key}: ${url}`);
     });
-    
+
     if (index < projectsData.length - 1) {
       output.push("", "─".repeat(65), "");
     }
   });
-  
+
   appendOutput(ctx.outputBox, output);
 };
 
 export const displayNeofetch = (ctx: CommandContext) => {
   const profileData = profile;
   const skills = Object.keys(fileSystem["~"].contents!.skills.contents!);
-  
+
   const output = [
     "                   -`                    kentaromorishita@portfolio",
     "                  .o+`                   ──────────────────────────────",
@@ -204,7 +233,7 @@ export const displayNeofetch = (ctx: CommandContext) => {
     "       -osssssso.      :ssssssso.        Icons: Emoji Pack",
     "      :osssssss/        osssso+++.       Terminal: Modern CLI Portfolio",
     "     /ossssssss/        +ssssooo/-       CPU: " + profileData.name,
-    "   `/ossssso+/:-        -:/+osssso+-     GPU: Creative Problem Solving",  
+    "   `/ossssso+/:-        -:/+osssso+-     GPU: Creative Problem Solving",
     "  `+sso+:-`                 `.-/+oso:    Memory: " + profileData.age + " years of experience",
     " `++:.                           `-/+/   Disk: ∞ GB of curiosity",
     " .`                                 `/   ",
@@ -213,7 +242,7 @@ export const displayNeofetch = (ctx: CommandContext) => {
     "                     Hobbies: " + profileData.hobbies.join(', '),
     "                     Contact: " + profileData.github
   ];
-  
+
   appendOutput(ctx.outputBox, output);
 };
 
