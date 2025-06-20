@@ -1,6 +1,3 @@
-import help from './assets/help.json' assert {type: "json"};
-import profile from './assets/profile.json' assert {type: "json"};
-
 export type FileType = 'file' | 'directory';
 
 export interface FileNode {
@@ -11,77 +8,302 @@ export interface FileNode {
   size: string;
 }
 
-const skills: FileNode = {
-  type: 'directory',
-  contents: {
-    TypeScript: {
-      type: 'file',
-      permissions: '-rw-r--r--',
-      size: '20 GB',
-    },
-    JavaScript: { type: 'file', permissions: '-rw-r--r--', size: '5 GB' },
-    React: { type: 'file', permissions: '-rw-r--r--', size: '10 GB' },
-    'Next.js': { type: 'file', permissions: '-rw-r--r--', size: '4 GB' },
-    'Vue.js': { type: 'file', permissions: '-rw-r--r--', size: '2 GB' },
-    'Nuxt.js': { type: 'file', permissions: '-rw-r--r--', size: '4 GB' },
-    'Tailwind CSS': {
-      type: 'file',
-      permissions: '-rw-r--r--',
-      size: '1 GB',
-    },
-    AWS: { type: 'file', permissions: '-rw-r--r--', size: '5 GB' },
-    PHP: { type: 'file', permissions: '-rw-r--r--', size: '6 GB' },
-    Laravel: { type: 'file', permissions: '-rw-r--r--', size: '4 GB' },
-    MySQL: { type: 'file', permissions: '-rw-r--r--', size: '4 GB' },
-    Docker: { type: 'file', permissions: '-rw-r--r--', size: '2 GB' },
-  },
-  permissions: 'drwxr-xr-x',
-  size: '-',
-}
-
-const foo: FileNode = {
-  type: 'directory',
-  contents: {},
-  permissions: 'drwxr-xr-x',
-  size: '-',
-}
-
-const fuga: FileNode = {
-  type: 'directory',
-  contents: { foo },
-  permissions: 'drwxr-xr-x',
-  size: '-',
-}
-
-const hoge: FileNode = {
-  type: 'directory',
-  contents: { fuga },
-  permissions: 'drwxr-xr-x',
-  size: '-',
-}
-
-
-
+// Create a dungeon-like file system with game elements
 export const fileSystem: Record<string, FileNode> = {
   '~': {
     type: 'directory',
     contents: {
-      hoge,
-      'profile.json': {
-        type: 'file',
-        permissions: '-rw-r--r--',
-        size: '552B',
-        body: [JSON.stringify(profile, null, 2)],
+      'dungeon': {
+        type: 'directory',
+        contents: {
+          'gate.txt': {
+            type: 'file',
+            permissions: '-rw-r--r--',
+            size: '256B',
+            body: [
+              '🏰 ダンジョン入口 🏰',
+              '',
+              'ようこそ、勇敢な冒険者よ！',
+              '',
+              'あなたは今、デジタルダンジョンの',
+              '入口に立っている。奥深くには',
+              '数々の財宝が眠っているという...',
+              '',
+              '💡 "ls treasure_room"で宝物庫を覗いてみよう',
+              '✨ "spells"ディレクトリで魔法を学べるぞ！'
+            ],
+          },
+          'treasure_room': {
+            type: 'directory',
+            contents: {
+              'gold_chest.txt': {
+                type: 'file',
+                permissions: '-rwx------',
+                size: '512B',
+                body: [
+                  '✨ 宝箱が開いた！ ✨',
+                  '',
+                  '   💰 +500 ゴールド',
+                  '   💎 +1 ダイヤモンド',
+                  '   🗡️  +1 魔法の剣',
+                  '',
+                  'おめでとう！財宝を発見した！',
+                  '',
+                  '　　💰✨💎',
+                  '　　宝の山',
+                  '　　💰✨💎',
+                  '',
+                  '🎉 宝物発見の栄光を手に入れた！'
+                ],
+              },
+              'mysterious_orb': {
+                type: 'file',
+                permissions: '-r-x--x--x',
+                size: '333B',
+                body: [
+                  '🔮 神秘のオーブ 🔮',
+                  '',
+                  'オーブが古代の力で光っている...',
+                  '',
+                  '触れると、幻影が現れた:',
+                  '',
+                  '  「真の探索者よ、隠された知識を求める者よ、',
+                  '   この宝物庫の奥に眠る古代の巻物を見つけよ。',
+                  '   "ls -la"コマンドがその扉を開く鍵となろう」',
+                  '',
+                  '⭐ 30経験値獲得！',
+                  '🔮 神秘のオーブをアイテムに追加！',
+                  '',
+                  'オーブが囁く: 「隠された巻物を探せ...」'
+                ],
+              },
+              '.hidden_scroll': {
+                type: 'file',
+                permissions: '-r--------',
+                size: '1KB',
+                body: [
+                  '📜 古代の秘密の巻物 📜',
+                  '',
+                  '✨ 探索者の信条 ✨',
+                  '',
+                  '「デジタル探索の領域において、',
+                  ' 全てのコマンドは前進への一歩、',
+                  ' 全てのディレクトリは新たな冒険、',
+                  ' 全てのファイルは語られるのを待つ物語なり」',
+                  '',
+                  '🎮 実績解除: 秘密の発見者',
+                  '⭐ 隠された巻物を発見した！',
+                  '💎 レアアイテム: 古代の巻物を獲得！',
+                  '',
+                  'おめでとう！隠しファイルの秘密を解き明かした！',
+                  'これで君も立派なLinux探索者だ！',
+                  '',
+                  'デジタルダンジョンで遊んでくれてありがとう！🗡️✨'
+                ],
+              },
+            },
+            permissions: 'drwxr-xr-x',
+            size: '1KB',
+          },
+          'spells': {
+            type: 'directory',
+            contents: {
+              'fire_spell.sh': {
+                type: 'file',
+                permissions: '-rwxr-xr-x',
+                size: '256B',
+                body: [
+                  '#!/bin/bash',
+                  '# 🔥 FIRE SPELL 🔥',
+                  '',
+                  'echo "        🔥"',
+                  'echo "      🔥🔥🔥"',
+                  'echo "    🔥🔥🔥🔥🔥"',
+                  'echo "      🔥🔥🔥"',
+                  'echo "        🔥"',
+                  '',
+                  'echo "WHOOSH! Fire spell cast!"',
+                  'echo "🎯 Hit! Enemy takes 25 damage!"',
+                  '',
+                  '# This is an executable spell file',
+                  '# In a real terminal, you could run: ./fire_spell.sh'
+                ],
+              },
+              'ice_spell.sh': {
+                type: 'file',
+                permissions: '-rwxr-xr-x',
+                size: '256B',
+                body: [
+                  '#!/bin/bash',
+                  '# ❄️ ICE SPELL ❄️',
+                  '',
+                  'echo "      ❄️    ❄️"',
+                  'echo "  ❄️    ❄️    ❄️"',
+                  'echo "    ❄️  ❄️  ❄️"',
+                  'echo "      ❄️❄️❄️"',
+                  'echo "        ❄️"',
+                  '',
+                  'echo "FREEZE! Ice spell activated!"',
+                  'echo "🧊 Enemy is frozen for 2 turns!"',
+                  '',
+                  '# Another executable spell'
+                ],
+              },
+              'spell_book.txt': {
+                type: 'file',
+                permissions: '-rw-r--r--',
+                size: '512B',
+                body: [
+                  '📖 SPELL BOOK 📖',
+                  '',
+                  'Available Spells:',
+                  '─────────────────',
+                  '',
+                  '🔥 fire_spell.sh - Deals fire damage',
+                  '❄️ ice_spell.sh  - Freezes enemies',
+                  '⚡ Coming soon: lightning_spell.sh',
+                  '',
+                  'To read a spell: cat [spell_name]',
+                  'To cast a spell: exec [spell_name]',
+                  '',
+                  '詠唱に必要な魔力: 充分',
+                  '',
+                  '📚 Study more spells in other directories!'
+                ],
+              },
+            },
+            permissions: 'drwxr-xr-x',
+            size: '768B',
+          },
+          'monsters': {
+            type: 'directory',
+            contents: {
+              'dragon.txt': {
+                type: 'file',
+                permissions: '-r--r--r--',
+                size: '1KB',
+                body: [
+                  '🐉 ANCIENT DRAGON 🐉',
+                  '',
+                  '              /|    /|  ',
+                  '             ( :v:  ) ',
+                  '              |(_)|  ',
+                  '             /     \\ ',
+                  '            /       \\',
+                  '           /         \\',
+                  '          /_         _\\',
+                  '',
+                  'A fearsome dragon blocks your path!',
+                  '',
+                  'HP: 100/100 ██████████',
+                  'MP: 50/50   █████',
+                  '',
+                  'Dragon says: "Answer my riddle to pass:"',
+                  '',
+                  '"私は4文字のLinuxコマンド。',
+                  ' 与えられた文字列をそのまま標準出力へ。',
+                  ' Hello Worldの表示でよく使われ、',
+                  ' $VARIABLEの値確認にも必須。私は？"',
+                  '',
+                  '(Hint: echoディレクトリでanswerを探せ！)'
+                ],
+              },
+              'goblin.txt': {
+                type: 'file',
+                permissions: '-rw-r--r--',
+                size: '384B',
+                body: [
+                  '👹 SNEAKY GOBLIN 👹',
+                  '',
+                  '    /\\_/\\  ',
+                  '   ( o.o ) ',
+                  '    > ^ <  ',
+                  '',
+                  'A mischievous goblin appears!',
+                  '',
+                  'HP: 30/30 ███████',
+                  '',
+                  'Goblin: "ククク... 隠しファイルって知ってる？',
+                  '         ファイル名が"."で始まるやつさ！',
+                  '         宝物庫に俺の秘密を隠してやったぜ！',
+                  '         見つけられるかな〜？"',
+                  '',
+                  '💡 ヒント: ls -la で隠しファイルが見えるぞ！',
+                  '',
+                  '🎲 ゴブリンは笑いながら逃げていった...',
+                  '',
+                  '📚 Unixの隠しファイルについて学べた！',
+                  '⭐ 10経験値を獲得！'
+                ],
+              },
+            },
+            permissions: 'drwxr-xr-x',
+            size: '512B',
+          },
+          'echo': {
+            type: 'directory',
+            contents: {
+              'answer.txt': {
+                type: 'file',
+                permissions: '-rw-r--r--',
+                size: '128B',
+                body: [
+                  '🐉 ドラゴンの謎かけの答え：',
+                  '',
+                  '答え: 🗣️ ECHO コマンド',
+                  '',
+                  'echoコマンドは:',
+                  '・入力された文字列をそのまま出力する',
+                  '・シェルスクリプトで変数や文字列を表示',
+                  '・ターミナルで最もよく使われるコマンドの一つ',
+                  '',
+                  '🎉 正解！ドラゴンが道を開けてくれた！',
+                  '🎮 謎解きの報酬: 50経験値獲得！'
+                ],
+              },
+            },
+            permissions: 'drwxr-xr-x',
+            size: '256B',
+          },
+        },
+        permissions: 'drwxr-xr-x',
+        size: '2KB',
       },
       'README.md': {
         type: 'file',
         permissions: '-rw-r--r--',
-        size: '196B',
-        body: [...(help as string[])],
+        size: '512B',
+        body: [
+          '# 🎮 デジタルダンジョン',
+          '',
+          'デジタルダンジョンアドベンチャーへようこそ！',
+          '',
+          '## 利用可能なコマンド',
+          '',
+          '- `ls` - 内容一覧表示',
+          '- `cd [ディレクトリ]` - ディレクトリ移動',
+          '- `cat [ファイル]` - ファイル内容表示',
+          '- `exec [ファイル.sh]` - 魔法スクリプト実行',
+          '- `status` - 冒険者ステータス表示',
+          '- `clear` - 画面クリア',
+          '- `help` - このヘルプ表示',
+          '',
+          '## ゲーム目標',
+          '',
+          'ダンジョンを探索し、財宝を見つけ、',
+          '謎を解き、秘密を発見しよう！',
+          '',
+          '## 冒険開始',
+          '',
+          '```bash',
+          'cd dungeon',
+          '```',
+          '',
+          '幸運を祈る、冒険者よ！ 🗡️✨'
+        ],
       },
-      skills,
     },
     permissions: 'drwxr-xr-x',
-    size: '-',
+    size: '4KB',
   },
 };

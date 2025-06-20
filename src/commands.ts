@@ -6,27 +6,110 @@ import type { FileNode } from './fileSystem';
 import { fileSystem } from './fileSystem';
 
 export type Commands = {
-  ls: (ctx: CommandContext) => void;
+  ls: (ctx: CommandContext, arg?: string) => void;
   cd: (ctx: CommandContext, arg?: string) => void;
   cat: (ctx: CommandContext, arg?: string) => void;
   help: (ctx: CommandContext) => void;
   clear: (ctx: CommandContext) => void;
   whoami: (ctx: CommandContext) => void;
   projects: (ctx: CommandContext) => void;
+  la: (ctx: CommandContext) => void;
+  status: (ctx: CommandContext) => void;
+  exec: (ctx: CommandContext, arg?: string) => void;
 }
 
 export type AvailableCommands = keyof Commands
 
+export type GameStats = {
+  level: number;
+  experience: number;
+  gold: number;
+  items: string[];
+  achievements: {
+    secretFinder: boolean;
+    treasureHunter: boolean;
+    riddleSolver: boolean;
+    spellCaster: boolean;
+  };
+  visitedFiles: Set<string>;
+};
+
 export type CommandContext = {
   currentPathBox: RBox<string[]>;
   outputBox: RBox<string[]>;
+  gameStatsBox: RBox<GameStats>;
 };
 
 export const getCurrentDirectory = (currentPath: string[]): FileNode =>
   currentPath.slice(1).reduce<FileNode>((currentDir, dir) => currentDir.contents![dir], fileSystem["~"])
 
+
+// Unified path resolution function that handles ".." properly
+export const resolvePath = (currentPath: string[], targetPath: string): string[] => {
+  // Start with current path (excluding "~" at index 0)
+  let resolvedPath = [...currentPath.slice(1)];
+  
+  // Handle absolute vs relative paths
+  if (targetPath.startsWith('/')) {
+    // Absolute path - start from root
+    resolvedPath = [];
+    targetPath = targetPath.substring(1);
+  }
+  
+  // Split path and filter out empty segments
+  const pathParts = targetPath.split('/').filter(part => part !== '');
+  
+  // Process each path segment
+  for (const part of pathParts) {
+    if (part === '..') {
+      // Go up one directory (but not above root)
+      if (resolvedPath.length > 0) {
+        resolvedPath.pop();
+      }
+    } else if (part !== '.') {
+      // Regular directory name (ignore "." current directory)
+      resolvedPath.push(part);
+    }
+  }
+  
+  // Return full path including "~"
+  return ["~", ...resolvedPath];
+};
+
+// Get directory node from resolved path
+export const getDirectoryFromPath = (resolvedPath: string[]): FileNode | null => {
+  try {
+    return resolvedPath.slice(1).reduce<FileNode>((currentDir, dir) => {
+      if (!currentDir.contents || !currentDir.contents[dir]) {
+        throw new Error("Directory not found");
+      }
+      return currentDir.contents[dir];
+    }, fileSystem["~"]);
+  } catch {
+    return null;
+  }
+};
+
 export const appendOutput = (outputBox: RBox<string[]>, message: string | string[]) => {
   outputBox.setValue((prev) => [...prev, ...[message].flat()]);
+};
+
+export const appendOutputWithClass = (outputBox: RBox<string[]>, message: string | string[], className?: string) => {
+  const lines = [message].flat();
+  const wrappedLines = className 
+    ? lines.map(line => {
+        // ASCIIアート（等幅フォント必要）の判定
+        const isASCIIArt = line.includes('___') || line.includes('ASCII') ||
+                          /^\s*[|/\\]+\s*$/.test(line);
+        
+        if (isASCIIArt) {
+          return `<span class="ascii-art">${line}</span>`;
+        } else {
+          return `<span class="${className}">${line}</span>`;
+        }
+      })
+    : lines;
+  outputBox.setValue((prev) => [...prev, ...wrappedLines]);
 };
 
 export const appendOutputWithTyping = (outputBox: RBox<string[]>, message: string | string[], delay: number = 30) => {
@@ -64,16 +147,54 @@ export const appendOutputWithTyping = (outputBox: RBox<string[]>, message: strin
   typeNextChar();
 };
 
-export const listDirectory = ({ currentPathBox, outputBox }: CommandContext) => {
+export const listDirectory = ({ currentPathBox, outputBox }: CommandContext, arg?: string) => {
   const dir = getCurrentDirectory(currentPathBox.getValue());
   const contents = dir.contents || {};
-  const details = Object.entries(contents).map(([name, item]) => {
-    const permissions = item.permissions
-    const size = item.size;
-    const separator = item.type === 'directory' ? '/' : ''
-    return `${permissions} 1 morishita morishita ${size} ${name}${separator}`;
-  });
-  appendOutput(outputBox, details);
+  
+  // オプション解析
+  let showHidden = false;
+  let showDetails = false;
+  
+  if (arg) {
+    // -で始まるオプションの場合
+    if (arg.startsWith('-')) {
+      const options = arg.slice(1); // -を除去
+      showHidden = options.includes('a');
+      showDetails = options.includes('l');
+    } else {
+      // ディレクトリ名が指定された場合（今回は未対応）
+      appendOutput(outputBox, `ls: ${arg}: directory listing not implemented`);
+      return;
+    }
+  }
+  
+  // ファイル一覧の取得
+  let entries = Object.entries(contents);
+  
+  // 隠しファイルのフィルタリング
+  if (!showHidden) {
+    entries = entries.filter(([name]) => !name.startsWith('.'));
+  }
+  
+  if (showDetails) {
+    // 詳細表示（-l オプション）
+    const details = entries.map(([name, item]) => {
+      const type = item.type === 'directory' ? 'd' : '-';
+      const permissions = item.permissions.slice(1);
+      const size = item.size.padStart(8);
+      return `${type}${permissions} 1 morishita morishita ${size} ${name}`;
+    });
+    appendOutput(outputBox, details);
+  } else {
+    // シンプル表示
+    const fileNames = entries.map(([name, item]) => {
+      const separator = item.type === 'directory' ? '/' : '';
+      return `${name}${separator}`;
+    });
+    
+    // 複数列で表示
+    appendOutput(outputBox, [fileNames.join('  ')]);
+  }
 };
 
 export const changeDirectory = ({ currentPathBox, outputBox }: CommandContext, arg?: string) => {
@@ -82,31 +203,55 @@ export const changeDirectory = ({ currentPathBox, outputBox }: CommandContext, a
     return;
   }
 
-  for (const dir of arg.split('/').filter(v => v !== '')) {
-    if (dir === ".." && currentPathBox.getValue().length > 1) {
-      currentPathBox.setValue((prev) => prev.slice(0, -1));
-      continue;
-    }
+  // Use unified path resolution
+  const resolvedPath = resolvePath(currentPathBox.getValue(), arg);
+  const targetDir = getDirectoryFromPath(resolvedPath);
 
-    const currentDir = getCurrentDirectory(currentPathBox.getValue());
-    const target = currentDir?.contents?.[dir];
-
-    if (!target || target.type !== "directory") {
-      appendOutput(outputBox, `cd: The directory '${dir}' does not exist`);
-      break;
-    }
-    currentPathBox.setValue((prev) => [...prev, dir]);
+  if (!targetDir || targetDir.type !== "directory") {
+    appendOutput(outputBox, `cd: ${arg}: No such file or directory`);
+    return;
   }
+
+  currentPathBox.setValue(() => resolvedPath);
 };
 
-export const readFile = ({ currentPathBox, outputBox }: CommandContext, arg?: string) => {
+export const readFile = ({ currentPathBox, outputBox, gameStatsBox }: CommandContext, arg?: string) => {
   if (!arg) {
     appendOutput(outputBox, 'cat: missing argument');
     return;
   }
 
-  const dir = getCurrentDirectory(currentPathBox.getValue());
-  const target = dir?.contents?.[arg];
+  let target: FileNode | undefined;
+  let actualFilePath = arg;
+
+  // パス解析: ディレクトリ/ファイル形式の場合
+  if (arg.includes('/')) {
+    const pathParts = arg.split('/');
+    const fileName = pathParts.pop()!;
+    const dirPath = pathParts.join('/');
+    
+    // Use unified path resolution for directory part
+    const resolvedDirPath = resolvePath(currentPathBox.getValue(), dirPath);
+    const targetDir = getDirectoryFromPath(resolvedDirPath);
+    
+    if (!targetDir) {
+      appendOutput(outputBox, `cat: ${arg}: No such file or directory`);
+      return;
+    }
+    
+    if (targetDir.type !== 'directory') {
+      appendOutput(outputBox, `cat: ${arg}: Not a directory`);
+      return;
+    }
+    
+    // 最終的なファイルを取得
+    target = targetDir.contents?.[fileName];
+    actualFilePath = fileName;
+  } else {
+    // 単純なファイル名の場合
+    const dir = getCurrentDirectory(currentPathBox.getValue());
+    target = dir?.contents?.[arg];
+  }
 
   if (!target) {
     appendOutput(outputBox, `cat: ${arg}: No such file`);
@@ -117,7 +262,77 @@ export const readFile = ({ currentPathBox, outputBox }: CommandContext, arg?: st
     appendOutput(outputBox, `cat: ${arg}: Is a directory`);
     return;
   }
-  appendOutput(outputBox, [`Displaying contents of ${arg}`, ...(target.body ?? [])]);
+  // ヘッダーは通常フォント
+  appendOutput(outputBox, [`Displaying contents of ${arg}`]);
+  
+  // ファイル内容はゲーム風フォント
+  if (target.body && target.body.length > 0) {
+    appendOutputWithClass(outputBox, target.body, 'cat-output japanese-content');
+  }
+  
+  // ゲームステータス更新ロジック
+  const currentPath = currentPathBox.getValue().join('/');
+  const filePath = `${currentPath}/${arg}`;
+  
+  gameStatsBox.setValue(prevStats => {
+    const newStats = { ...prevStats };
+    
+    // 新しいファイルを読んだ場合は経験値獲得
+    if (!newStats.visitedFiles.has(filePath)) {
+      newStats.visitedFiles.add(filePath);
+      newStats.experience += 10;
+      
+      // レベルアップ判定
+      const newLevel = Math.floor(newStats.experience / 100) + 1;
+      if (newLevel > newStats.level) {
+        newStats.level = newLevel;
+        appendOutput(outputBox, ['', '🎉 レベルアップ！ 新しいレベル: ' + newLevel]);
+      }
+    }
+    
+    // 特定ファイルでの特別報酬
+    if (actualFilePath === 'gold_chest.txt') {
+      newStats.gold += 500;
+      newStats.items.push('ダイヤモンド', '魔法の剣');
+      newStats.achievements.treasureHunter = true;
+      appendOutput(outputBox, ['', '💰 500ゴールド獲得！', '🎮 実績解除: 宝物ハンター']);
+    }
+    
+    if (actualFilePath === '.hidden_scroll') {
+      newStats.achievements.secretFinder = true;
+      newStats.experience += 100;
+      if (!newStats.items.includes('古代の巻物')) {
+        newStats.items.push('古代の巻物');
+      }
+      appendOutput(outputBox, ['', '🎮 実績解除: 秘密の発見者', '⭐ 100経験値獲得！', '💎 古代の巻物を獲得！']);
+    }
+    
+    if (actualFilePath === 'answer.txt') {
+      newStats.achievements.riddleSolver = true;
+      newStats.experience += 50;
+      appendOutput(outputBox, ['', '🎮 実績解除: 謎解き師', '🧠 50経験値獲得！']);
+    }
+    
+    if (actualFilePath.includes('spell')) {
+      newStats.achievements.spellCaster = true;
+      appendOutput(outputBox, ['', '🎮 実績解除: 魔法使い']);
+    }
+    
+    if (actualFilePath === 'mysterious_orb') {
+      newStats.experience += 30;
+      if (!newStats.items.includes('神秘のオーブ')) {
+        newStats.items.push('神秘のオーブ');
+      }
+      appendOutput(outputBox, ['', '⭐ 30経験値獲得！', '🔮 神秘のオーブを獲得！']);
+    }
+    
+    if (actualFilePath === 'goblin.txt') {
+      newStats.experience += 10;
+      appendOutput(outputBox, ['', '📚 Unixの隠しファイルについて学べた！', '⭐ 10経験値獲得！']);
+    }
+    
+    return newStats;
+  });
 };
 
 export const displayHelp = (ctx: CommandContext) => appendOutput(ctx.outputBox, (help as string[]));
@@ -213,6 +428,200 @@ export const displayProjects = (ctx: CommandContext) => {
 };
 
 
+const listDirectoryLongAll = (ctx: CommandContext) => {
+  const currentDir = getCurrentDirectory(ctx.currentPathBox.getValue());
+  const files = Object.entries(currentDir.contents || {});
+  
+  const formatFile = (name: string, file: FileNode): string => {
+    const type = file.type === 'directory' ? 'd' : '-';
+    const permissions = file.permissions.slice(1);
+    const size = file.size.padStart(8);
+    return `${type}${permissions} 1 morishita morishita ${size} ${name}`;
+  };
+
+  const output = files.map(([name, file]) => formatFile(name, file));
+  appendOutput(ctx.outputBox, output);
+};
+
+const displayStatus = (ctx: CommandContext) => {
+  const stats = ctx.gameStatsBox.getValue();
+  
+  const achievementsList = [
+    stats.achievements.secretFinder ? '[✓] 秘密の発見者' : '[ ] 秘密の発見者',
+    stats.achievements.treasureHunter ? '[✓] 宝物ハンター' : '[ ] 宝物ハンター',
+    stats.achievements.riddleSolver ? '[✓] 謎解き師' : '[ ] 謎解き師',
+    stats.achievements.spellCaster ? '[✓] 魔法使い' : '[ ] 魔法使い',
+  ];
+  
+  const output = [
+    '📊 冒険者ステータス 📊',
+    '',
+    '基本情報:',
+    '────────────────────',
+    `レベル: ${stats.level}`,
+    `経験値: ${stats.experience} XP`,
+    `ゴールド: ${stats.gold} G`,
+    `アイテム: ${stats.items.length > 0 ? stats.items.join(', ') : 'なし'}`,
+    '',
+    '実績:',
+    '────────────',
+    ...achievementsList,
+    '',
+    `探索済みファイル数: ${stats.visitedFiles.size}`,
+    '',
+    'より多くのファイルを探索して経験値を稼ごう！'
+  ];
+  
+  appendOutputWithClass(ctx.outputBox, output, 'cat-output japanese-content');
+};
+
+const executeScript = ({ currentPathBox, outputBox, gameStatsBox }: CommandContext, arg?: string) => {
+  if (!arg) {
+    appendOutput(outputBox, 'exec: missing argument');
+    return;
+  }
+
+  let target: FileNode | undefined;
+  let actualFilePath = arg;
+
+  // パス解析: ディレクトリ/ファイル形式の場合
+  if (arg.includes('/')) {
+    const pathParts = arg.split('/');
+    const fileName = pathParts.pop()!;
+    const dirPath = pathParts.join('/');
+    
+    // Use unified path resolution for directory part
+    const resolvedDirPath = resolvePath(currentPathBox.getValue(), dirPath);
+    const targetDir = getDirectoryFromPath(resolvedDirPath);
+    
+    if (!targetDir) {
+      appendOutput(outputBox, `exec: ${arg}: No such file or directory`);
+      return;
+    }
+    
+    if (targetDir.type !== 'directory') {
+      appendOutput(outputBox, `exec: ${arg}: Not a directory`);
+      return;
+    }
+    
+    // 最終的なファイルを取得
+    target = targetDir.contents?.[fileName];
+    actualFilePath = fileName;
+  } else {
+    // 単純なファイル名の場合
+    const dir = getCurrentDirectory(currentPathBox.getValue());
+    target = dir?.contents?.[arg];
+  }
+
+  if (!target) {
+    appendOutput(outputBox, `exec: ${arg}: No such file`);
+    return;
+  }
+
+  if (target.type === "directory") {
+    appendOutput(outputBox, `exec: ${arg}: Is a directory`);
+    return;
+  }
+
+  // 実行権限チェック
+  if (!target.permissions.includes('x')) {
+    appendOutput(outputBox, `exec: ${arg}: Permission denied`);
+    return;
+  }
+
+  // .shファイルかチェック
+  if (!actualFilePath.endsWith('.sh')) {
+    appendOutput(outputBox, `exec: ${arg}: Not an executable script`);
+    return;
+  }
+
+  appendOutput(outputBox, [`Executing ${arg}...`]);
+  appendOutput(outputBox, ['']);
+
+  // スペル実行のシミュレーション
+  if (actualFilePath === 'fire_spell.sh') {
+    appendOutputWithClass(outputBox, [
+      '🔥 FIRE SPELL ACTIVATED! 🔥',
+      '',
+      '        🔥',
+      '      🔥🔥🔥',
+      '    🔥🔥🔥🔥🔥',
+      '      🔥🔥🔥',
+      '        🔥',
+      '',
+      'WHOOSH! Fire spell cast!',
+      '🎯 Hit! Enemy takes 25 damage!',
+      '',
+      '✨ 魔法の力を感じる...'
+    ], 'cat-output japanese-content');
+
+    // ゲームステータス更新
+    gameStatsBox.setValue(prevStats => {
+      const newStats = { ...prevStats };
+      newStats.achievements.spellCaster = true;
+      newStats.experience += 30;
+      
+      if (!newStats.items.includes('火の魔法石')) {
+        newStats.items.push('火の魔法石');
+      }
+      
+      return newStats;
+    });
+
+    appendOutputWithClass(outputBox, [
+      '',
+      '🎮 実績解除: 魔法使い',
+      '🔥 火の魔法石を獲得！',
+      '⭐ 30経験値獲得！'
+    ], 'cat-output japanese-content');
+
+  } else if (actualFilePath === 'ice_spell.sh') {
+    appendOutputWithClass(outputBox, [
+      '❄️ ICE SPELL ACTIVATED! ❄️',
+      '',
+      '      ❄️    ❄️',
+      '  ❄️    ❄️    ❄️',
+      '    ❄️  ❄️  ❄️',
+      '      ❄️❄️❄️',
+      '        ❄️',
+      '',
+      'FREEZE! Ice spell activated!',
+      '🧊 Enemy is frozen for 2 turns!',
+      '',
+      '❄️ 氷の力が周囲に広がる...'
+    ], 'cat-output japanese-content');
+
+    // ゲームステータス更新
+    gameStatsBox.setValue(prevStats => {
+      const newStats = { ...prevStats };
+      newStats.achievements.spellCaster = true;
+      newStats.experience += 30;
+      
+      if (!newStats.items.includes('氷の魔法石')) {
+        newStats.items.push('氷の魔法石');
+      }
+      
+      return newStats;
+    });
+
+    appendOutputWithClass(outputBox, [
+      '',
+      '🎮 実績解除: 魔法使い',
+      '❄️ 氷の魔法石を獲得！',
+      '⭐ 30経験値獲得！'
+    ], 'cat-output japanese-content');
+
+  } else {
+    // 他の実行可能ファイル用の汎用実行
+    appendOutputWithClass(outputBox, [
+      '⚡ SCRIPT EXECUTED! ⚡',
+      '',
+      '魔法のスクリプトが実行されました！',
+      '✨ 何かが起こった...'
+    ], 'cat-output japanese-content');
+  }
+};
+
 export const commands: Commands = {
   ls: listDirectory,
   cd: changeDirectory,
@@ -221,4 +630,7 @@ export const commands: Commands = {
   clear: clearOutput,
   whoami: displayWhoAmI,
   projects: displayProjects,
+  la: listDirectoryLongAll,
+  status: displayStatus,
+  exec: executeScript,
 };

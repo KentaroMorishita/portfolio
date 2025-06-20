@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from "react"
 import { RBox, Maybe } from "f-box-core"
 import { useRBox, set } from "f-box-react"
-import type { CommandContext, AvailableCommands } from "./commands"
-import { commands, appendOutput } from "./commands"
+import type { CommandContext, AvailableCommands, GameStats } from "./commands"
+import { commands, appendOutput, getCurrentDirectory, resolvePath, getDirectoryFromPath } from "./commands"
+import type { FileNode } from "./fileSystem"
 
 // Cyberpunk background component
 const CyberpunkBackground: React.FC = () => {
@@ -222,6 +223,19 @@ const createNewTerminal = (offsetX = 0, offsetY = 0): Terminal => {
     context: {
       currentPathBox: RBox.pack<string[]>(["~"]),
       outputBox: RBox.pack<string[]>(welcomeMessage),
+      gameStatsBox: RBox.pack<GameStats>({
+        level: 1,
+        experience: 0,
+        gold: 0,
+        items: [],
+        achievements: {
+          secretFinder: false,
+          treasureHunter: false,
+          riddleSolver: false,
+          spellCaster: false,
+        },
+        visitedFiles: new Set<string>(),
+      }),
     },
     zIndex: terminalIdCounter,
   }
@@ -315,16 +329,123 @@ const TerminalWindow: React.FC<{
       }
     } else if (e.key === "Tab") {
       e.preventDefault()
-      const availableCommands = Object.keys(commands)
-      const currentValue = input.value.toLowerCase()
-      const matches = availableCommands.filter((cmd) =>
-        cmd.toLowerCase().startsWith(currentValue)
-      )
+      
+      const inputText = input.value
+      const words = inputText.split(" ")
+      const isCompletingCommand = words.length === 1 && !inputText.endsWith(" ")
+      
+      if (isCompletingCommand) {
+        // コマンド名の補完
+        const availableCommands = Object.keys(commands)
+        const currentValue = inputText.toLowerCase()
+        const matches = availableCommands.filter((cmd) =>
+          cmd.toLowerCase().startsWith(currentValue)
+        )
 
-      if (matches.length === 1) {
-        input.value = matches[0]
-      } else if (matches.length > 1) {
-        appendOutput(terminal.context.outputBox, matches.join("  "))
+        if (matches.length === 1) {
+          input.value = matches[0] + " "
+        } else if (matches.length > 1) {
+          // 共通プレフィックスまで補完
+          const commonPrefix = matches.reduce((prefix, match) => {
+            let i = 0
+            while (i < prefix.length && i < match.length && 
+                   prefix[i].toLowerCase() === match[i].toLowerCase()) {
+              i++
+            }
+            return prefix.slice(0, i)
+          })
+          
+          if (commonPrefix.length > currentValue.length) {
+            input.value = commonPrefix
+          } else {
+            appendOutput(terminal.context.outputBox, matches.join("  "))
+          }
+        }
+      } else {
+        // ファイル/ディレクトリ名の補完
+        const command = words[0]
+        const currentArg = words.slice(1).join(" ")
+        
+        if (command === "cd" || command === "cat" || command === "ls" || command === "exec") {
+          // パス解析: ディレクトリ部分と補完対象ファイル名を分離
+          const pathParts = currentArg.split("/")
+          const targetFileName = pathParts.pop() || ""
+          const targetDirPath = pathParts.join("/")
+          
+          // 補完対象のディレクトリを取得
+          let targetDir: FileNode
+          try {
+            if (targetDirPath) {
+              // Use unified path resolution for tab completion
+              const resolvedPath = resolvePath(terminal.context.currentPathBox.getValue(), targetDirPath)
+              const resolvedDir = getDirectoryFromPath(resolvedPath)
+              
+              if (!resolvedDir || resolvedDir.type !== 'directory') {
+                // ディレクトリが見つからない場合は補完なし
+                return
+              }
+              targetDir = resolvedDir
+            } else {
+              // 現在のディレクトリ
+              targetDir = getCurrentDirectory(terminal.context.currentPathBox.getValue())
+            }
+          } catch {
+            // ディレクトリが見つからない場合は補完なし
+            return
+          }
+          
+          const availableItems = Object.keys(targetDir.contents || {})
+          
+          // 隠しファイルの表示制御
+          const showHiddenFiles = targetFileName.startsWith('.')
+          const visibleItems = showHiddenFiles 
+            ? availableItems 
+            : availableItems.filter(item => !item.startsWith('.'))
+          
+          let matches = visibleItems
+          if (targetFileName) {
+            matches = visibleItems.filter(item =>
+              item.toLowerCase().startsWith(targetFileName.toLowerCase())
+            )
+          }
+          
+          if (matches.length === 0) {
+            // マッチするファイルがない場合は何もしない
+            return
+          } else if (matches.length === 1) {
+            // 1つだけマッチした場合は自動補完
+            const completedPath = targetDirPath 
+              ? targetDirPath + "/" + matches[0]
+              : matches[0]
+            input.value = words[0] + " " + completedPath
+          } else if (matches.length > 1) {
+            // 複数マッチした場合
+            if (targetFileName.length === 0) {
+              // ファイル名が空（ディレクトリ+/の状態）の場合は全ての候補を表示
+              appendOutput(terminal.context.outputBox, matches.join("  "))
+            } else {
+              // 共通プレフィックスまで補完
+              const commonPrefix = matches.reduce((prefix, match) => {
+                let i = 0
+                while (i < prefix.length && i < match.length && 
+                       prefix[i].toLowerCase() === match[i].toLowerCase()) {
+                  i++
+                }
+                return prefix.slice(0, i)
+              })
+              
+              if (commonPrefix.length > targetFileName.length) {
+                const completedPath = targetDirPath 
+                  ? targetDirPath + "/" + commonPrefix
+                  : commonPrefix
+                input.value = words[0] + " " + completedPath
+              } else {
+                // 候補を表示
+                appendOutput(terminal.context.outputBox, matches.join("  "))
+              }
+            }
+          }
+        }
       }
     } else {
       if (historyIndex !== -1) {
@@ -625,6 +746,17 @@ const TerminalWindow: React.FC<{
                 })
               }
 
+              // HTMLクラスを含む場合はdangerouslySetInnerHTMLを使用
+              if (line.includes('<span class=')) {
+                return (
+                  <div 
+                    key={index} 
+                    className={getLineColor(line)}
+                    dangerouslySetInnerHTML={{ __html: line }}
+                  />
+                )
+              }
+
               return (
                 <div key={index} className={getLineColor(line)}>
                   {renderLineWithLinks(line)}
@@ -648,7 +780,7 @@ const TerminalWindow: React.FC<{
               autoFocus={!terminal.isMinimized}
               type="text"
               id={`console-${terminal.id}`}
-              className="bg-slate-900 text-slate-200 border-none outline-none w-3/4 placeholder-slate-500"
+              className="bg-slate-900 text-slate-200 font-mono border-none outline-none w-3/4 placeholder-slate-500"
               onKeyDown={handleKeyDown}
             />
           </div>

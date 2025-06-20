@@ -6,7 +6,10 @@
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
       "Bash(npm run dev:*)",
-      "Bash(rsvg-convert:*)"
+      "Bash(rsvg-convert:*)",
+      "mcp__lapras__get_experiences",
+      "mcp__lapras__get_job_summary",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

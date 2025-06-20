@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* cat出力用ゲーム風フォント */
+.cat-output {
+  font-family: 'Zen Kaku Gothic New', 'M PLUS 1 Code', 'Sawarabi Gothic', sans-serif;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* 日本語コンテンツ専用スタイル */
+.japanese-content {
+  font-family: 'Zen Kaku Gothic New', 'M PLUS 1 Code', sans-serif;
+  text-shadow: 0px 0px 5px rgba(0, 255, 255, 0.3);
+  font-weight: 500;
+}
+
+/* ASCII アートやエモジ用の調整 */
+.ascii-art {
+  font-family: 'Courier New', monospace;
+  line-height: 1.2;
+  letter-spacing: normal;
+  font-weight: normal;
+}
