@@ -126,7 +126,6 @@ export const fileSystem: Record<string, FileNode> = {
                   'echo "🎯 Hit! Enemy takes 25 damage!"',
                   "",
                   "# This is an executable spell file",
-                  "# In a real terminal, you could run: ./fire_spell.sh",
                 ],
               },
               "ice_spell.sh": {
