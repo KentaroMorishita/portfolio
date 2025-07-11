@@ -11,7 +11,8 @@
   "ownWorks": {
     "f-box-core": "https://www.npmjs.com/package/f-box-core",
     "f-box-react": "https://www.npmjs.com/package/f-box-react",
-    "f-box-docs": "https://f-box-docs.com"
+    "f-box-docs": "https://f-box-docs.com",
+    "seseragi": "https://seseragi.vercel.app"
   },
   "hobbies": ["Parenting", "Guitar", "Cooking"]
 }

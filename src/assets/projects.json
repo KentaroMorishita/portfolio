@@ -1,5 +1,15 @@
 [
   {
+    "name": "Seseragi",
+    "description": "A new programming language that transpiles to TypeScript with concise syntax",
+    "tech": ["Next.js", "TypeScript", "React", "Language Design", "Compiler"],
+    "status": "Active",
+    "links": {
+      "Seseragi Playground": "https://seseragi.vercel.app",
+      "github": "https://github.com/KentaroMorishita/seseragi"
+    }
+  },
+  {
     "name": "F-Box State Management Library",
     "description": "Reactive state management library for JavaScript/TypeScript",
     "tech": ["TypeScript", "React", "Node.js"],

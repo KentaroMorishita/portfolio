@@ -500,6 +500,7 @@ export const displayWhoAmI = (ctx: CommandContext) => {
     ` f-box-core:  ${profileData.ownWorks["f-box-core"]} `,
     ` f-box-react: ${profileData.ownWorks["f-box-react"]} `,
     ` f-box-docs:  ${profileData.ownWorks["f-box-docs"]} `,
+    ` seseragi:    ${profileData.ownWorks["seseragi"]} `,
     ` ${profileData.hobbies.join(" • ")} `,
     " PROFILE INFO ",
     " LINKS ",
@@ -540,6 +541,9 @@ export const displayWhoAmI = (ctx: CommandContext) => {
       maxContentWidth
     )}│`,
     `│${` f-box-docs:  ${profileData.ownWorks["f-box-docs"]}`.padEnd(
+      maxContentWidth
+    )}│`,
+    `│${` seseragi:    ${profileData.ownWorks["seseragi"]}`.padEnd(
       maxContentWidth
     )}│`,
     `├${borderLine}┤`,
